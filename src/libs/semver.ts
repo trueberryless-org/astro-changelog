@@ -1,4 +1,4 @@
-import { major, minor, parse, patch, SemVer, valid } from "semver";
+import { major, minor, parse, patch, prerelease, SemVer, valid } from "semver";
 
 export function getSemVerFromRelease(release: any): SemVer | null {
   return parse(valid(release.data.versionNum));
@@ -9,7 +9,7 @@ export function isAtLeastMinorRelease(version: SemVer | string | null): boolean 
     return false;
   }
 
-  if (patch(version) === 0) {
+  if (patch(version) === 0 && prerelease(version) === null) {
     return true;
   }
 

@@ -9,7 +9,7 @@ export async function getStaticPaths() {
 	const releases = await getCollection('releases');
 
 	return releases
-	.filter((post) => post.data.tagName.startsWith('@astrojs/starlight@'))
+	.filter((post) => post.data.tagName.startsWith('astro@'))
 	.map((release) => ({
 		params: { slug: release.id },
 		props: { release },

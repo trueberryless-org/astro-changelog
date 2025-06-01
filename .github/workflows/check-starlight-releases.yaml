@@ -1,12 +1,12 @@
-name: Check Starlight Releases
+name: Check Astro Releases
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # Daily at 3 AM UTC
+    - cron: "0 3 * * *" # Daily at 3 AM UTC
   workflow_dispatch:
 
 jobs:
-  check-starlight-release:
+  check-astro-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,17 +15,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch latest Starlight release
+      - name: Fetch latest Astro release
         id: fetch
         run: |
-          curl -s https://api.github.com/repos/withastro/starlight/releases/latest > starlight-latest.json
-          echo "tag_name=$(jq -r .tag_name starlight-latest.json)" >> $GITHUB_OUTPUT
+          curl -s https://api.github.com/repos/withastro/astro/releases/latest > astro-latest.json
+          echo "tag_name=$(jq -r .tag_name astro-latest.json)" >> $GITHUB_OUTPUT
 
       - name: Load previous release
         id: previous
         run: |
-          if [[ -f data/starlight-latest.json ]]; then
-            echo "previous_tag=$(jq -r .tag_name data/starlight-latest.json)" >> $GITHUB_OUTPUT
+          if [[ -f data/astro-latest.json ]]; then
+            echo "previous_tag=$(jq -r .tag_name data/astro-latest.json)" >> $GITHUB_OUTPUT
           else
             echo "previous_tag=" >> $GITHUB_OUTPUT
           fi
@@ -43,11 +43,11 @@ jobs:
         if: steps.compare.outputs.release_changed == 'true'
         run: |
           mkdir -p data
-          jq '{ tag_name, name, published_at, html_url }' starlight-latest.json > data/starlight-latest.json
+          jq '{ tag_name, name, published_at, html_url }' astro-latest.json > data/astro-latest.json
 
       - name: Auto-commit updated release JSON
         if: steps.compare.outputs.release_changed == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update Starlight release to ${{ steps.fetch.outputs.tag_name }}"
-          file_pattern: data/starlight-latest.json
+          commit_message: "Update Astro release to ${{ steps.fetch.outputs.tag_name }}"
+          file_pattern: data/astro-latest.json

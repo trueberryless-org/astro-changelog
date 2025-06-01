@@ -4,7 +4,7 @@ import { githubReleasesLoader } from "astro-loader-github-releases";
 const releases = defineCollection({
   loader: githubReleasesLoader({
     mode: "repoList",
-    repos: ["withastro/starlight"],
+    repos: ["withastro/astro"],
     entryReturnType: "byRelease",
   }),
 });
