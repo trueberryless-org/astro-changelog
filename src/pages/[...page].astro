@@ -1,0 +1,32 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+
+import { getReleases } from "../libs/release";
+
+import Pagination from "../components/Pagination.astro";
+import Release from "../components/Release.astro";
+import Layout from "../layouts/Layout.astro";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  return paginate(await getReleases(), { pageSize: 20 });
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { page } = Astro.props;
+---
+
+<Layout title="Astro Changelog">
+  <main>
+    <h1 class="page_title">Changelog</h1>
+    <hr />
+    <ul class="posts" transition:name="post">
+      {page.data.map((release) => (
+        <li class="post">
+          <Release isLink {release} />
+        </li>
+      ))}
+    </ul>
+    <Pagination {page} />
+  </main>
+</Layout>

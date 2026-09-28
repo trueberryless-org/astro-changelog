@@ -1,0 +1,28 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+
+import {
+  getReleaseDescription,
+  getReleases,
+  getReleaseStaticPaths,
+} from "../../libs/release";
+
+import Release from "../../components/Release.astro";
+import Layout from "../../layouts/Layout.astro";
+
+export const getStaticPaths = (async () => {
+  return getReleaseStaticPaths(await getReleases());
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { redirect, release } = Astro.props;
+
+if (redirect) return Astro.redirect(redirect, 301);
+---
+
+<Layout title={release.data.name} description={getReleaseDescription(release)}>
+  <div class="post single" transition:name="post">
+    <Release {release} />
+  </div>
+</Layout>
