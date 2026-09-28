@@ -27,12 +27,12 @@ const image = getReleaseImage(release);
   <div class="version_info">
     {isLink ? (
       <a href={getReleasePath(release)}>
-        <div class="version_number">{release.id}</div>
+        <div class="version_number">{release.data.version}</div>
         <FormattedDate class="date" {date} />
       </a>
     ) : (
       <>
-        <div class="version_number">{release.id}</div>
+        <div class="version_number">{release.data.version}</div>
         <FormattedDate class="date" {date} />
       </>
     )}

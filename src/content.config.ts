@@ -1,9 +1,9 @@
 import { defineCollection } from "astro:content";
 
-import { astroReleasesLoader } from "./libs/loader";
+import { githubReleasesLoader } from "./libs/loader";
 
 const releases = defineCollection({
-  loader: astroReleasesLoader(),
+  loader: githubReleasesLoader(),
 });
 
 export const collections = { releases };

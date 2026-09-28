@@ -2,78 +2,75 @@ import type { Loader, LoaderContext } from "astro/loaders";
 import { z } from "astro/zod";
 
 import { type GitHubRelease, fetchGitHubReleases } from "./github";
-import { getAstroReleaseVersion } from "./version";
+import { parseReleaseTag } from "./package";
 
 const releaseSchema = z.object({
   createdAt: z.coerce.date(),
-  name: z.string(),
-  nodeId: z.string(),
+  packageName: z.string(),
   publishedAt: z.coerce.date().optional(),
-  url: z.url(),
+  version: z.string(),
 });
 
-export function astroReleasesLoader() {
+export function githubReleasesLoader() {
   return {
-    name: "astro-releases",
+    name: "github-releases",
     async load(context) {
       const token = import.meta.env.GITHUB_TOKEN;
       if (!token) {
         context.logger.warn(
-          "No `GITHUB_TOKEN` environment variable set. Only releases among the latest 1000 GitHub releases of `withastro/astro` will be loaded."
+          "No `GITHUB_TOKEN` environment variable set. Only the latest 1000 GitHub releases of `withastro/astro` will be loaded."
         );
       }
 
-      const githubReleases = await fetchGitHubReleases(token);
+      try {
+        const githubReleases = await fetchGitHubReleases(token);
 
-      await storeAstroReleases(githubReleases, context);
+        await storeReleases(githubReleases, context);
+      } catch (error) {
+        if (context.store.keys().length === 0) throw error;
+
+        context.logger.warn(
+          `Failed to refresh GitHub releases, using cached releases instead. ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
     },
     schema: releaseSchema,
   } satisfies Loader;
 }
 
-async function storeAstroReleases(
+async function storeReleases(
   githubReleases: GitHubRelease[],
   context: LoaderContext
 ) {
   const { generateDigest, parseData, renderMarkdown, store } = context;
-  const versions = new Set<string>();
+  const ids = new Set<string>();
 
   for (const githubRelease of githubReleases) {
-    const version = getAstroReleaseVersion(githubRelease.tag_name);
-    if (!version) continue;
+    const id = githubRelease.tag_name;
+    const tag = parseReleaseTag(id);
+    if (!tag) continue;
 
-    versions.add(version);
+    ids.add(id);
 
     const body = githubRelease.body ?? "";
     const data = await parseData({
-      data: githubReleaseToData(githubRelease),
-      id: version,
+      data: { ...tag, ...githubReleaseToDates(githubRelease) },
+      id,
     });
     const digest = generateDigest({ body, data });
-    if (store.get(version)?.digest === digest) continue;
+    if (store.get(id)?.digest === digest) continue;
 
-    store.set({
-      body,
-      data,
-      digest,
-      id: version,
-      rendered: await renderMarkdown(body),
-    });
+    store.set({ body, data, digest, id, rendered: await renderMarkdown(body) });
   }
 
   for (const id of store.keys()) {
-    if (!versions.has(id)) store.delete(id);
+    if (!ids.has(id)) store.delete(id);
   }
 }
 
-function githubReleaseToData(
-  githubRelease: GitHubRelease
-): z.input<typeof releaseSchema> {
+function githubReleaseToDates(githubRelease: GitHubRelease) {
   return {
     createdAt: githubRelease.created_at,
-    name: githubRelease.name ?? githubRelease.tag_name,
-    nodeId: githubRelease.node_id,
     publishedAt: githubRelease.published_at ?? undefined,
-    url: githubRelease.html_url,
   };
 }

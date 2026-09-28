@@ -2,7 +2,9 @@ import { satteri } from "@astrojs/markdown-satteri";
 import expressiveCode from "astro-expressive-code";
 import { defineConfig, fontProviders } from "astro/config";
 
+import { pagefindIntegration } from "./src/libs/pagefind";
 import { satteriReleaseHeadings } from "./src/libs/satteri";
+import { shouldInlineAsset } from "./src/libs/vite";
 
 export default defineConfig({
   fonts: [
@@ -26,9 +28,17 @@ export default defineConfig({
   image: {
     domains: ["release-image-generator.netlify.app"],
   },
-  integrations: [expressiveCode()],
+  integrations: [
+    expressiveCode({ shiki: { langAlias: { mdoc: "markdown" } } }),
+    pagefindIntegration(),
+  ],
   markdown: {
     processor: satteri({ hastPlugins: [satteriReleaseHeadings()] }),
   },
   site: "https://astro-changelog.netlify.app",
+  vite: {
+    build: {
+      assetsInlineLimit: shouldInlineAsset,
+    },
+  },
 });

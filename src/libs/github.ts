@@ -8,9 +8,6 @@ const GITHUB_UNAUTHENTICATED_RESULTS_LIMIT_STATUS = 422;
 const githubReleaseSchema = z.object({
   body: z.string().nullable(),
   created_at: z.string(),
-  html_url: z.url(),
-  name: z.string().nullable(),
-  node_id: z.string(),
   published_at: z.string().nullable(),
   tag_name: z.string(),
 });

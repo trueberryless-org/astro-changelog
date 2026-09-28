@@ -1,9 +1,17 @@
 import { type CollectionEntry, getCollection } from "astro:content";
 
-import { getMinorReleaseVersion } from "./version";
+import {
+  getMinorReleaseVersion,
+  getPackagePath,
+  getPackageReleasePath,
+  isAstroPackage,
+  packageNameToSlug,
+} from "./package";
 
 const RELEASE_IMAGE_HEIGHT = 640;
 const RELEASE_IMAGE_WIDTH = 1650;
+
+export const RELEASES_PER_PAGE = 20;
 
 export async function getReleases() {
   const releases = await getCollection("releases");
@@ -13,16 +21,48 @@ export async function getReleases() {
   );
 }
 
+export async function getPackageReleases(packageName: string) {
+  const releases = await getReleases();
+
+  return releases.filter((release) => release.data.packageName === packageName);
+}
+
+export async function getPackages() {
+  const releases = await getReleases();
+  const packages = new Map<string, Package>();
+
+  for (const release of releases) {
+    const { packageName } = release.data;
+    const releasePackage = packages.get(packageName);
+
+    if (releasePackage) {
+      releasePackage.releases.push(release);
+    } else {
+      packages.set(packageName, {
+        latestRelease: release,
+        name: packageName,
+        path: getPackagePath(packageName),
+        releases: [release],
+        slug: packageNameToSlug(packageName),
+      });
+    }
+  }
+
+  return [...packages.values()];
+}
+
 export function getReleaseDate(release: Release) {
   return release.data.publishedAt ?? release.data.createdAt;
 }
 
 export function getReleaseDescription(release: Release) {
-  return `Release notes for ${release.data.name}.`;
+  return `Release notes for ${release.id}.`;
 }
 
 export function getReleaseImage(release: Release) {
-  const minorVersion = getMinorReleaseVersion(release.id);
+  if (!isAstroPackage(release.data.packageName)) return;
+
+  const minorVersion = getMinorReleaseVersion(release.data.version);
   if (!minorVersion) return;
 
   const url = new URL(
@@ -41,17 +81,15 @@ export function getReleaseImage(release: Release) {
 }
 
 export function getReleasePath(release: Release) {
-  return `/releases/${release.id}/`;
-}
-
-export function getReleaseStaticPaths(releases: Release[]) {
-  return releases.flatMap((release) => [
-    { params: { id: release.id }, props: { redirect: undefined, release } },
-    {
-      params: { id: release.data.nodeId },
-      props: { redirect: getReleasePath(release), release },
-    },
-  ]);
+  return getPackageReleasePath(release.data.packageName, release.data.version);
 }
 
 export type Release = CollectionEntry<"releases">;
+
+export interface Package {
+  latestRelease: Release;
+  name: string;
+  path: string;
+  releases: Release[];
+  slug: string;
+}
