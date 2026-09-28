@@ -166,6 +166,7 @@ code {
 
 .page_title {
   margin: 1.5em 0;
+  overflow-wrap: anywhere;
   @media (max-width: $tablet) {
     margin: 0.5em 0;
   }
@@ -256,8 +257,10 @@ code {
 
 .content {
   width: 100%;
+  min-width: 0;
   margin: 0;
   padding: 4em 0;
+  overflow-wrap: anywhere;
   border-bottom: 1px solid colors.color(gray, 100);
   @media (max-width: $tablet) {
     margin: 1em 0;
@@ -268,6 +271,16 @@ code {
   }
   *:first-child {
     margin-top: 0;
+  }
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  pre,
+  iframe,
+  video {
+    max-width: 100%;
   }
   img {
     max-width: 100%;

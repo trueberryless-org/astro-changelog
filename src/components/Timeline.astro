@@ -1,6 +1,7 @@
 ---
 import type { Page } from "astro";
 
+import { splitPackageScope } from "../libs/package";
 import type { Release as ReleaseEntry } from "../libs/release";
 
 import Pagination from "./Pagination.astro";
@@ -14,10 +15,19 @@ interface Props {
 }
 
 const { packageName, page, title } = Astro.props;
+
+const titleSegments = splitPackageScope(title);
 ---
 
 <main>
-  <h1 class="page_title">{title}</h1>
+  <h1 class="page_title">
+    {titleSegments.map((segment, index) => (
+      <>
+        {index > 0 && <wbr />}
+        {segment}
+      </>
+    ))}
+  </h1>
   <Search {packageName} />
   <hr />
   <ul class="posts" transition:name="post">
