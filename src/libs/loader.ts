@@ -23,9 +23,10 @@ export function githubReleasesLoader() {
       }
 
       try {
-        const githubReleases = await fetchGitHubReleases(token);
+        const { isComplete, releases } = await fetchGitHubReleases(token);
 
-        await storeReleases(githubReleases, context);
+        const ids = await storeReleases(releases, context);
+        if (isComplete) deleteStaleReleases(ids, context);
       } catch (error) {
         if (context.store.keys().length === 0) throw error;
 
@@ -63,6 +64,10 @@ async function storeReleases(
     store.set({ body, data, digest, id, rendered: await renderMarkdown(body) });
   }
 
+  return ids;
+}
+
+function deleteStaleReleases(ids: Set<string>, { store }: LoaderContext) {
   for (const id of store.keys()) {
     if (!ids.has(id)) store.delete(id);
   }

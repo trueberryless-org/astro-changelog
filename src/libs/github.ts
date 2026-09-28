@@ -17,10 +17,12 @@ export async function fetchGitHubReleases(token: string | undefined) {
 
   for (let page = 1; ; page++) {
     const pageReleases = await fetchGitHubReleasesPage(page, token);
-    if (!pageReleases) return releases;
+    if (!pageReleases) return { isComplete: false, releases };
 
     releases.push(...pageReleases);
-    if (pageReleases.length < GITHUB_RELEASES_PER_PAGE) return releases;
+    if (pageReleases.length < GITHUB_RELEASES_PER_PAGE) {
+      return { isComplete: true, releases };
+    }
   }
 }
 

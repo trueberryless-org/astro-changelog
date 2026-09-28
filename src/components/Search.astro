@@ -29,6 +29,7 @@ const { packageName } = Astro.props;
 
   class ReleaseSearch extends HTMLElement {
     #pagefind: Promise<Pagefind> | undefined;
+    #searchId = 0;
 
     connectedCallback() {
       this.#getInput()?.addEventListener("input", () => this.#search());
@@ -47,6 +48,7 @@ const { packageName } = Astro.props;
     };
 
     async #search() {
+      const searchId = ++this.#searchId;
       const query = this.#getInput()?.value.trim();
 
       if (!query) {
@@ -64,10 +66,15 @@ const { packageName } = Astro.props;
         const results = await Promise.all(
           search.results.slice(0, MAX_RESULTS).map((result) => result.data())
         );
+        if (searchId !== this.#searchId) return;
 
         this.#render(results, getStatus(search.results.length));
-      } catch {
-        this.#render([], "Search is only available in a production build.");
+      } catch (error) {
+        if (searchId !== this.#searchId) return;
+
+        this.#pagefind = undefined;
+        this.#render([], getErrorStatus());
+        if (!import.meta.env.DEV) console.error(error);
       }
     }
 
@@ -109,6 +116,12 @@ const { packageName } = Astro.props;
       return `Showing ${MAX_RESULTS} of ${count} releases.`;
 
     return count === 1 ? "1 release found." : `${count} releases found.`;
+  }
+
+  function getErrorStatus() {
+    return import.meta.env.DEV
+      ? "Search is only available in a production build."
+      : "Search is currently unavailable. Please try again later.";
   }
 
   function createResultElement(result: PagefindResultData) {
